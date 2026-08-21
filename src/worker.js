@@ -73,7 +73,8 @@ async function createReport(request, env) {
   const id = crypto.randomUUID(), now = new Date().toISOString();
   const extension = image.type === "image/png" ? "png" : image.type === "image/webp" ? "webp" : "jpg";
   const imageKey = `reports/${id}.${extension}`;
-  await env.ROAD_IMAGES.put(imageKey, image.stream(), { httpMetadata: { contentType: image.type, cacheControl: "public, max-age=31536000, immutable" }, customMetadata: { reportId: id, uploadedAt: now } });
+  const imageBytes = await image.arrayBuffer();
+  await env.IMAGES.put(imageKey, imageBytes, { metadata: { contentType: image.type, reportId: id, uploadedAt: now } });
   await env.DB.batch([
     env.DB.prepare(`INSERT INTO reports (id, location_name, address, latitude, longitude, description, severity, status, reporter_name, is_anonymous, image_key, image_content_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?)`)
       .bind(id, locationName || null, address || null, latitude, longitude, description, severity, reporterName, anonymous ? 1 : 0, imageKey, image.type, now, now),
@@ -93,10 +94,10 @@ async function getReport(id, env) {
 async function getImage(id, env) {
   const report = await env.DB.prepare("SELECT image_key FROM reports WHERE id=?").bind(id).first();
   if (!report?.image_key) return new Response("Image not found", { status: 404 });
-  const object = await env.ROAD_IMAGES.get(report.image_key);
-  if (!object) return new Response("Image not found", { status: 404 });
-  const headers = new Headers(); object.writeHttpMetadata(headers); headers.set("etag", object.httpEtag); headers.set("cache-control", "public, max-age=31536000, immutable");
-  return new Response(object.body, { headers });
+  const { value, metadata } = await env.IMAGES.getWithMetadata(report.image_key, { type: "arrayBuffer" });
+  if (value === null) return new Response("Image not found", { status: 404 });
+  const headers = new Headers({ "content-type": metadata?.contentType || "image/jpeg", "cache-control": "public, max-age=31536000, immutable" });
+  return new Response(value, { headers });
 }
 
 async function voteForReport(id, request, env) {
