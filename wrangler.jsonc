@@ -5,10 +5,10 @@
   "compatibility_date": "2025-08-21",
   "assets": { "directory": "./public", "binding": "ASSETS" },
   "d1_databases": [
-    { "binding": "DB", "database_name": "road-maintenance-db", "database_id": "REPLACE_WITH_D1_DATABASE_ID" }
+    { "binding": "DB", "database_name": "road-maintenance-db", "database_id": "00a8299f-2f0c-4c07-a6e4-f980c9bd1410" }
   ],
   "kv_namespaces": [
-    { "binding": "IMAGES", "id": "REPLACE_WITH_KV_NAMESPACE_ID" }
+    { "binding": "IMAGES", "id": "ae564de333d94da58e166a170095e6e6" }
   ],
   "vars": {
     "CITY_NAME": "Chhatrapati Sambhajinagar, Maharashtra",
