@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "road-maintenance-complaint-tracking",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-08-21",
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "road-maintenance-db", "database_id": "REPLACE_WITH_D1_DATABASE_ID" }
+  ],
+  "r2_buckets": [
+    { "binding": "ROAD_IMAGES", "bucket_name": "road-maintenance-images" }
+  ],
+  "vars": {
+    "CITY_NAME": "Chhatrapati Sambhajinagar, Maharashtra",
+    "MAX_IMAGE_SIZE_MB": "5",
+    "MAP_CENTER_LAT": "19.8762",
+    "MAP_CENTER_LNG": "75.3433"
+  }
+}
