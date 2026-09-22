@@ -75,12 +75,17 @@ async function createReport(request, env) {
   const imageKey = `reports/${id}.${extension}`;
   const imageBytes = await image.arrayBuffer();
   await env.IMAGES.put(imageKey, imageBytes, { metadata: { contentType: image.type, reportId: id, uploadedAt: now } });
-  await env.DB.batch([
-    env.DB.prepare(`INSERT INTO reports (id, location_name, address, latitude, longitude, description, severity, status, reporter_name, is_anonymous, image_key, image_content_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?)`)
-      .bind(id, locationName || null, address || null, latitude, longitude, description, severity, reporterName, anonymous ? 1 : 0, imageKey, image.type, now, now),
-    env.DB.prepare(`INSERT INTO report_events (id, report_id, event_type, status, message, actor, created_at) VALUES (?, ?, 'created', 'new', ?, ?, ?)`)
-      .bind(crypto.randomUUID(), id, "Road damage reported by the public.", anonymous ? "Anonymous public reporter" : (reporterName || "Public reporter"), now)
-  ]);
+  try {
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO reports (id, location_name, address, latitude, longitude, description, severity, status, reporter_name, is_anonymous, image_key, image_content_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?)`)
+        .bind(id, locationName || null, address || null, latitude, longitude, description, severity, reporterName, anonymous ? 1 : 0, imageKey, image.type, now, now),
+      env.DB.prepare(`INSERT INTO report_events (id, report_id, event_type, status, message, actor, created_at) VALUES (?, ?, 'created', 'new', ?, ?, ?)`)
+        .bind(crypto.randomUUID(), id, "Road damage reported by the public.", anonymous ? "Anonymous public reporter" : (reporterName || "Public reporter"), now)
+    ]);
+  } catch (error) {
+    await env.IMAGES.delete(imageKey).catch(() => {});
+    throw error;
+  }
   return json({ report: publicReport(await env.DB.prepare("SELECT * FROM reports WHERE id=?").bind(id).first()) }, 201);
 }
 
