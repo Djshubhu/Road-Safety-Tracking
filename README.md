@@ -40,14 +40,15 @@ by government authorities and tender companies.
 }
 ```
 
-3. Deploy via Cloudflare Workers (Github → Cloudflare connection) or:
+3. Deploy via Cloudflare Workers. The deployment script applies the idempotent database schema before publishing the Worker:
 
 ```bash
 npm install
 npx wrangler login
-npx wrangler d1 execute road-maintenance-db --remote --file=migrations/0001_init.sql
-npx wrangler deploy
+npm run deploy
 ```
+
+If using Cloudflare's Git integration, set the deploy command to `npm run deploy` so a new database cannot be published without its schema.
 
 4. Add secrets in **Workers → Settings → Variables and Secrets**:
    - `ADMIN_TOKEN` — protects the authority portal (required)
